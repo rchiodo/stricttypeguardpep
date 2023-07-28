@@ -1,0 +1,157 @@
+PEP: 722
+Title: Stricter Type Guards
+Author: Rich Chiodo <rchiodo at microsoft.com>, Eric Traut <eric at traut.com>
+Sponsor: <real name of sponsor>
+PEP-Delegate: <PEP delegate's real name>
+Discussions-To: https://github.com/python/typing/discussions/1013
+Status: Draft
+Type: Standards Track
+Topic: Typing
+Content-Type: text/x-rst
+Created: 28-Jul-2023
+Python-Version: 3.10
+Post-History: 
+Resolution: 
+
+
+Abstract
+========
+
+This PEP further refines `TypeGuards
+<https://peps.python.org/pep-0647/>`__ to indicate when negative type narrowing is deemed safe.
+
+
+Motivation
+==========
+
+`TypeGuards
+<https://peps.python.org/pep-0647/>`__ are used throughout python libraries but are lacking in one regard.
+There's no indication what happens for the false case. Example:
+
+::
+    def is_str(val: str | int) -> TypeGuard[str]:
+        return isinstance(val, str)
+
+    def func(val: str | int):
+        if is_str(val):
+            reveal_type(val) # str
+        else:
+            reveal_type(val) # str | int
+
+This inability to determine the else case makes TypeGuard not as useful as it could be. 
+
+This PEP proposes that in cases where the output type is a 'strict' subtype of the input type, the negative
+case can be assumed. This changes the example so that the 'int' case be assumed:
+
+::
+    def is_str(val: str | int) -> TypeGuard[str]:
+        return isinstance(val, str)
+
+    def func(val: str | int):
+        if is_str(val):
+            reveal_type(val) # str
+        else:
+            reveal_type(val) # int
+
+The reason this works is because if the output type is a 'strict' subtype of the
+input, a type checker can determine that the only possiblity for the else is the other input type(s).
+
+There are cases where the output type is not a 'strict' subtype of input though. In these cases, the negative
+cannot be assumed to be the intuitive opposite:
+
+::
+    def is_str_list(val: list[int | str]) -> TypeGuard[list[str]]
+        return all(isinstance(x, str) for x in val)
+
+    def func(val: list[int | str]):
+        if is_str_list(val):
+            reveal_type(val) # list[str]
+        else:
+            reveal_type(val) # list[str | int], when likely 
+
+Specification
+=============
+
+This PEP requires no new changes to the language. It is merely modifying the definition of TypeGuard for type checkers. 
+The runtime should already be behaving in this way. 
+
+Existing TypeGuard usage may change though, as described below.
+
+
+Backwards Compatibility
+=======================
+
+For preexisting code this should require no changes, but should simplify this use case here:
+
+:: 
+    A = TypeVar("A")
+    B = TypeVar("B")
+
+    def is_A(x: A | B) -> TypeGuard[A]:
+        raise NotImplementedError
+
+
+    def after_is_A(x: A | B) -> TypeGuard[B]:
+        return True
+
+
+    def test(x: A | B):
+        if is_A(x):
+            reveal_type(x)
+            return
+        assert after_is_A(x)
+
+        reveal_type(x)
+        return
+
+becomes this instead
+
+::
+
+    A = TypeVar("A")
+    B = TypeVar("B")
+
+    def is_A(x: A | B) -> TypeGuard[A]:
+        return isinstance(x, A)
+
+
+    def test(x: A | B):
+        if is_A(x):
+            reveal_type(x)
+            return
+        reveal_type(x)
+        return
+
+
+How to Teach This
+=================
+
+The belief is that new users will intuitively assume the behavior in the examples above are
+how TypeGuard works in the first place.
+
+
+Reference Implementation
+========================
+
+A reference implementation of this idea exists in Pyright.
+
+
+Rejected Ideas
+==============
+
+Originally a new `StrictTypeGuard` construct was going to be proposed. A `StrictTypeGuard` would be similar to
+to a `TypeGuard` except it would explicitly state that output type was a subtype of the input type. Type checkers 
+would validate the output type was a subtype of the input type.
+
+See this comment: `StrictTypeGuard proposal<https://github.com/python/typing/discussions/1013#discussioncomment-1966238>`__
+
+This was rejected because for most cases it's not necessary. Most people assume 
+the negative case for TypeGuard anyway, so why not just change the 
+specification to match their assumptions.
+
+
+Copyright
+=========
+
+This document is placed in the public domain or under the
+CC0-1.0-Universal license, whichever is more permissive.
