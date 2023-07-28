@@ -17,14 +17,14 @@ Resolution:
 Abstract
 ========
 
-This PEP further refines `TypeGuards <https://peps.python.org/pep-0647/>`__ to
+This PEP further refines `TypeGuards <typeguards_>`__ to
 indicate when negative type narrowing is deemed safe.
 
 
 Motivation
 ==========
 
-`TypeGuards<https://peps.python.org/pep-0647/>`__ are used throughout python
+`TypeGuards <typeguards_>`__ are used throughout python
 libraries but cannot be used to determine the negative case:
 
 ::
@@ -155,13 +155,15 @@ Originally a new **StrictTypeGuard** construct was going to be proposed. A
 explicitly state that output type was a subtype of the input type. Type checkers
 would validate the output type was a subtype of the input type.
 
-See this comment: `StrictTypeGuard
-proposal<https://github.com/python/typing/discussions/1013#discussioncomment-1966238>`__
+See this comment: `StrictTypeGuard proposal <https://github.com/python/typing/discussions/1013#discussioncomment-1966238>`__
 
 This was rejected because for most cases it's not necessary. Most people assume
 the negative case for TypeGuard anyway, so why not just change the specification
 to match their assumptions.
 
+Footnotes
+=========
+.. _typeguards: https://peps.python.org/pep-0647/
 
 Copyright
 =========
