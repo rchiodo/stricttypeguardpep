@@ -29,6 +29,7 @@ Motivation
 There's no indication what happens for the false case. Example:
 
 ::
+    
     def is_str(val: str | int) -> TypeGuard[str]:
         return isinstance(val, str)
 
@@ -44,6 +45,7 @@ This PEP proposes that in cases where the output type is a 'strict' subtype of t
 case can be assumed. This changes the example so that the 'int' case be assumed:
 
 ::
+
     def is_str(val: str | int) -> TypeGuard[str]:
         return isinstance(val, str)
 
@@ -60,6 +62,7 @@ There are cases where the output type is not a 'strict' subtype of input though.
 cannot be assumed to be the intuitive opposite:
 
 ::
+
     def is_str_list(val: list[int | str]) -> TypeGuard[list[str]]
         return all(isinstance(x, str) for x in val)
 
@@ -84,6 +87,7 @@ Backwards Compatibility
 For preexisting code this should require no changes, but should simplify this use case here:
 
 :: 
+
     A = TypeVar("A")
     B = TypeVar("B")
 
