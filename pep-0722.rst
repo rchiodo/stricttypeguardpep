@@ -67,7 +67,7 @@ cannot be assumed to be the intuitive opposite:
         if is_str_list(val):
             reveal_type(val) # list[str]
         else:
-            reveal_type(val) # list[str | int], when likely 
+            reveal_type(val) # list[str | int] 
 
 Specification
 =============
